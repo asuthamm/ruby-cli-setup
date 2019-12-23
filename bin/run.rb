@@ -1,4 +1,6 @@
 require_relative '../config/environment'
 
-app = nameOfYourApp.new
+app = MyYelp.new
 app.run
+
+

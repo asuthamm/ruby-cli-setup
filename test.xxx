@@ -1,0 +1,14 @@
+[1] pry(#<MyYelp>)> @user                                                                          
+=> #<Customer:0x00007f9f4a047310 id: 74, first_name: "John", last_name: "Smith", zip_code: "11214">
+[2] pry(#<MyYelp>)> @user.methods                                                                  
+=> [:autosave_associated_records_for_reviews,                                                      
+ :validate_associated_records_for_reviews,                                                         
+ :before_add_for_reviews,                                                                          
+ .                                                                                                 
+ .                                                                                                 
+ :_trigger_destroy_callback,                                                                       
+ :with_transaction_returning_status,                                                               
+ :reload,                                                                                          
+ :_destroy,                                                                                        
+ :marked_for_destruction?,                                                                         
+ :mark_for_destruction,                                                                             

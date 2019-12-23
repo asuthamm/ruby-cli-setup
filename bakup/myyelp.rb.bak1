@@ -1,0 +1,246 @@
+class MyYelp
+attr_reader
+
+require "tty-prompt"
+prompt = TTY::Prompt.new
+
+    def run
+        welcome
+    end
+
+    private
+
+    def welcome                           #--------------------
+        system "clear"
+        puts "- - -  Welcome to myYelp  - - - "
+        puts ""
+        puts "Please enter your user_id or '?' to search for your account"
+        puts "or just hit enter to create new account"
+
+        opt = gets.chomp
+        case opt
+        when ""
+            new_user
+        when "?"
+            search_user
+        else
+            @search_id = opt
+            return_user
+        end
+
+    end
+
+    def new_user                    # ---------------
+        system "clear"
+        puts 'What is your first name?'
+        fname = gets.chomp
+
+        puts 'What is your last name?'
+        lname = gets.chomp
+
+        puts "What is your zip code?"
+        zip = gets.chomp
+        
+        puts "Welcome, #{fname} #{lname} from zip code #{zip}"
+        Customer.create(first_name: fname,last_name: lname, zip_code: zip)
+        puts "You are customer#: #{Customer.all.last.id}"
+        @user = Customer.find(Customer.all.last.id)
+        puts ""
+        opt = gets.chomp
+        task_list
+    end
+
+    def return_user              # ----------------
+        system "clear"
+        @user = Customer.find(@search_id)
+        task_list
+    end
+
+    def search_user                 # -------------------
+        system "clear"
+        puts 'What is your first name?'
+        fname = gets.chomp
+
+        puts 'What is your last name?'
+        lname = gets.chomp
+
+        @user = Customer.all.find { |cust| cust.first_name == fname && cust.last_name == lname } 
+        puts "User found# #{@user.id}"
+        puts "Welcome back, #{@user.first_name} #{@user.last_name} from zip code #{@user.zip_code}"
+        puts ""
+        opt = gets.chomp
+        task_list
+    end
+
+    def task_list
+        system "clear"
+        puts "Welcome back, #{@user.first_name} #{@user.last_name} from zip code #{@user.zip_code}"
+        puts "User# #{@user.id}"
+        puts ""
+        puts "1.  All the restaurants in my zip code profile"
+        puts "2.  All the restaurants I had visited"
+        puts "3.  Create new review"
+        puts "4.  Update my previous review"
+        puts "5.  Delete my previous review"
+        puts "9.  Exit"
+        puts "Please enter your option below:"
+        opt = gets.chomp
+        # binding.pry
+        case opt
+        when "1"                      # list by zip
+            list_restaurants
+            task_list
+        when "2"                      # list my restaurants
+            my_reviews
+            task_list
+        when "3"                      # create new review
+            create_review
+            task_list
+        when "4"                      # chg my review
+            chg_rating
+            view_my_review
+            task_list
+        when "5"                      # delete my review       
+            review_delete
+            task_list
+        when "9"                      # bye
+            p 'Bye for now.'
+            system "exit"
+        else
+            task_list
+        end
+        
+    end
+
+    def list_restaurants
+        system "clear"
+        puts "Welcome back, #{@user.first_name} #{@user.last_name} from zip code #{@user.zip_code}"
+        puts "User# #{@user.id}"
+        puts ""
+        p "Restaurant in my area:"
+        p "===================================="
+        # Restaurant.all.each.map  { |rest| p rest.name if rest.zip_code == @user.zip_code }
+
+        arr = Restaurant.all.select  { |rest| rest.zip_code == @user.zip_code }
+        arr.each  { |rt| p "Average rating = #{rt.avg_rating}  - #{rt.name}" }
+        opt = gets.chomp
+    end
+
+    def my_reviews
+        binding.pry
+        system "clear"
+        puts "Welcome back, #{@user.first_name} #{@user.last_name} from zip code #{@user.zip_code}"
+        puts "User# #{@user.id}"
+        puts ""
+        puts "Here are the list of my restaurants I had visited in the past:"
+ 
+        
+        p "My rating   -   Restaurant name"
+        p "===================================="
+        @user.reviews.each do |review|
+            p "     #{review.rating}      -    #{review.restaurant.id}-#{review.restaurant.name}"
+         end 
+         opt = gets.chomp
+    end
+
+    def create_review           # ref by chg_rating & review_delete
+        system "clear"
+        puts "Welcome back, #{@user.first_name} #{@user.last_name} from zip code #{@user.zip_code}"
+        puts "User# #{@user.id}"
+        puts ""
+        puts "What is the name of the restaurant you want to eview?"
+        sch_rest = gets.chomp
+        puts ""
+        puts "Please enter the comment below:"
+        t_comnt = gets.chomp        
+        puts ""
+        puts "Please enter the rating (1-5) below:"
+        t_rating = gets.chomp
+
+        rt_id = Restaurant.all.find { |rt| rt.name == sch_rest}.id
+        Review.create(rating: t_rating, comment: t_comnt, customer_id: @user.id, restaurant_id: rt_id)
+        view_my_review
+    end
+
+    def search_review           # ref by chg_rating & review_delete
+        system "clear"
+        puts "Welcome back, #{@user.first_name} #{@user.last_name} from zip code #{@user.zip_code}"
+        puts "User# #{@user.id}"
+        puts ""
+        puts "What is the name of the restaurant you want to see your review?"
+        sch_rest = gets.chomp
+        @my_review = @user.reviews.find { |review| review.restaurant.name == sch_rest}
+        # if !!@myreview == false
+        #     task_list
+        # end
+        p "Your current review for #{@my_review.restaurant.name}"
+        p "================================================================================="
+        p "#{@my_review.rating}    -     #{@my_review.comment}"
+        p "================================================================================="
+        p ""
+    end
+
+    def chg_rating
+        search_review
+        puts "Welcome back, #{@user.first_name} #{@user.last_name} from zip code #{@user.zip_code}"
+        puts "User# #{@user.id}"
+        puts ""
+
+        puts 'What is your new rating?'
+        new_rating = gets.chomp
+
+        puts 'What is your new comment?'
+        new_comnt = gets.chomp
+
+        @my_review.update(rating: new_rating, comment: new_comnt)
+
+    end
+
+    def view_my_review
+        puts "Welcome back, #{@user.first_name} #{@user.last_name} from zip code #{@user.zip_code}"
+        puts "User# #{@user.id}"
+        puts ""
+        p "Your reviews for #{@my_review.restaurant.name}"
+        # p "Your reviews for #{@my_review.restaurant.name}"
+        p "===================================================="
+        p "#{@my_review.rating}    -     #{@my_review.comment}"
+        opt = gets.chomp
+    end
+    
+
+
+    def review_delete
+        # search_review
+        system "clear"
+        puts "Welcome back, #{@user.first_name} #{@user.last_name} from zip code #{@user.zip_code}"
+        puts "User# #{@user.id}"
+        puts ""
+        puts "What is the name of the restaurant you want to see your review?"
+        sch_rest = gets.chomp
+        @my_review = @user.reviews.find { |review| review.restaurant.name == sch_rest}
+        # if !!@myreview == false
+        #     task_list
+        # end
+        p "Your current review for #{@my_review.restaurant.name}"
+        p "================================================================================="
+        p "#{@my_review.rating}    -     #{@my_review.comment}"
+        p "================================================================================="
+        p ""
+        p ""
+        puts "==================================================="
+        puts "==  Caution! You're about to delete your review  =="
+        puts "==================================================="
+        opt = gets.chomp.downcase
+        # binding.pry
+        case opt 
+        when "delete"
+            # binding.pry
+            @my_review.destroy
+        else
+            puts "Abort!!"
+            opt = gets.chomp
+        end
+        # opt = gets.chomp
+    end
+end
+
